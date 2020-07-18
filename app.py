@@ -1,64 +1,87 @@
-from flask import Flask, render_template, url_for, request, redirect
+from flask import Flask, render_template, url_for, request, redirect, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
+from bs4 import BeautifulSoup
+from urllib.request import urlopen
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
-db=SQLAlchemy(app)
+db = SQLAlchemy(app)
 
-class Todo(db.Model):
-	id=db.Column(db.Integer, primary_key=True)
-	content = db.Column(db.String(200), nullable=False)
-	completed = db.Column(db.Integer, default=0)
-	date_created=db.Column(db.DateTime, default=datetime.utcnow)
 
-	def __repr__(self):
-		return '<Task %r>' % self.id
+class User(db.Model):
+    user_id = db.Column(db.Integer, primary_key=True)
+    user_name = db.Column(db.String(20), nullable=False)
+    date_created = db.Column(db.DateTime, default=datetime.utcnow)
+    # def __repr__(self):
+    #     return '<Task %r>' % self.user_id
+
 
 @app.route('/', methods=['POST', 'GET'])
 def index():
-	if request.method == 'POST':
-		task_content = request.form['content']
-		new_task = Todo(content=task_content)
+    # POST로 받은 값이 있을 때 (추가기능)
+    # case getting POST (add)
+    if request.method == 'POST':
+        user_name = request.form['user_name']
+        new_user = User(user_name=user_name)
+        try:
+            db.session.add(new_user)
+            db.session.commit()
+            return redirect('/')
+        except:
+            return 'There was an Issue Adding Your Task'
+    # 일반 조회 페이지
+    # default load page
+    else:
+        users = User.query.order_by(User.date_created).all()
+        return render_template('index.html', users=users)
 
-		try:
-			db.session.add(new_task)
-			db.session.commit()
-			return redirect('/')
-		except:
-			return 'There was an Issue Adding Your Task'
-	
-	else:
-		tasks = Todo.query.order_by(Todo.date_created).all()
-		return render_template('index.html', tasks=tasks)
-	
+
+@app.errorhandler(404)
+def page_not_found(error):
+    return render_template('404.html')
+
+
+@app.route('/crawling', methods=['POST', 'GET'])
+def crawling():
+    response = urlopen('https://www.daum.net/')
+    soup = BeautifulSoup(response, 'html.parser')
+    result = ""
+    for anchor in soup.select("a.link_favorsch"):
+        result += str(anchor)
+    # return result
+    return render_template('crawling.html')
+
+
 @app.route('/delete/<int:id>')
 def delete(id):
-	task_to_delete = Todo.query.get_or_404(id)
+    user_to_delelte = User.query.get_or_404(id)
 
-	try:
-		db.session.delete(task_to_delete)
-		db.session.commit()
-		return redirect('/')
-	except:
-		return 'There was a problem'
+    try:
+        db.session.delete(user_to_delelte)
+        db.session.commit()
+        return redirect('/')
+    except:
+        return 'There was a problem'
 
-@app.route('/update/<int:id>', methods=['GET','POST'])
+
+@app.route('/update/<int:id>', methods=['GET', 'POST'])
 def update(id):
-	task = Todo.query.get_or_404(id);
+    user = User.query.get_or_404(id)
 
-	if request.method == 'POST':
-		task.content = request.form['content']
+    if request.method == 'POST':
 
-		try:
-			db.session.commit()
-			return redirect('/')
-		except:
-			return 'Fuck'
-	else:
-		return render_template('update.html', task=task)
-	
+        user.user_name = request.form['user_name']
 
-if __name__ == "__main__"	:
-	app.run(debug=True)
+        try:
+            db.session.commit()
+            return redirect('/')
+        except:
+            return 'Fuck'
+    else:
+        return render_template('update.html', user=user)
+
+
+if __name__ == "__main__":
+    app.run(debug=True)
