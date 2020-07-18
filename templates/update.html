@@ -8,9 +8,9 @@
 	<div class="container">
 		<h1>Update Task</h1>	
 		
-		<form action="/update/{{task.id}}" method="POST">
-			<input type="text" name="content" id="content" value="{{task.content}}">
-			<input type="submit" value="Update Task" name="">
+		<form action="/update/{{user.user_id}}" method="POST">
+			<input type="text" name="user_name" id="content" value="{{user.user_name}}">
+			<input type="submit" value="Update Task">
 		</form>
 	</div>
 {% endblock %}

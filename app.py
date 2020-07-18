@@ -14,8 +14,9 @@ class User(db.Model):
     user_id = db.Column(db.Integer, primary_key=True)
     user_name = db.Column(db.String(20), nullable=False)
     date_created = db.Column(db.DateTime, default=datetime.utcnow)
-    # def __repr__(self):
-    #     return '<Task %r>' % self.user_id
+
+    def __repr__(self):
+        return '<Task %r>' % self.user_id
 
 
 @app.route('/', methods=['POST', 'GET'])
@@ -47,11 +48,16 @@ def page_not_found(error):
 def crawling():
     response = urlopen('https://www.daum.net/')
     soup = BeautifulSoup(response, 'html.parser')
-    result = ""
-    for anchor in soup.select("a.link_favorsch"):
-        result += str(anchor)
-    # return result
-    return render_template('crawling.html')
+    data_list = soup.select("a.link_favorsch")
+    return render_template('crawling.html', dl=data_list)
+
+
+@app.route('/detail/<int:id>', methods=['POST', 'GET'])
+def detail(id):
+    if (id):
+        return render_template('detail.html')
+    else:
+        return "nope"
 
 
 @app.route('/delete/<int:id>')

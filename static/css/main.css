@@ -1,5 +1,20 @@
-body{
-	margin: 100;
-	font-family: cursive;
-	font-size: 500;
+@tailwind base;
+
+@tailwind components;
+
+@tailwind utilities;
+
+// tailwind.config.js
+module.exports = {
+  theme: {},
+  variants: {},
+  plugins: [],
+}
+module.exports = {
+  plugins: [
+    // ...
+    require('tailwindcss'),
+    require('autoprefixer'),
+    // ...
+  ]
 }
